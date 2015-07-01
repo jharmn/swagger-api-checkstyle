@@ -1,0 +1,48 @@
+swagger: "2.0"
+host:
+ - "^api.uber.com$"
+ - "localhost:8080"
+basePath: "/v1"
+produces:
+- application/json
+consumes:
+- application/json
+schemes:
+- https
+paths:
+  namingConvention: "spine-case"
+  components:
+    0: resource
+    1: sub-resource
+  operationId:
+    namingConvention: "camelCase"
+  parameters:
+    # body, header, path
+    query:
+      namingConvention: "snake_case"
+      items:
+        - name: limit
+          schemaRef: "#/parameters/LimitParam"
+        - name: offset
+          schemaRef: "#/parameters/OffsetParam"
+    verbs:
+      # post, patch, put, delete
+      - get
+    status:
+      200:
+      default:
+        schemaRef: "#/definitions/Error"
+  schema:
+    namingConvention: "snake_case"
+    properties:
+      - name: "^.*\\_?id"
+        format: uuid
+      - name: "image"
+        format: url
+      - name: "currency_code"
+        format: currency
+        schemaRef: "#/definitions/CurrencyCode"
+      - name: "^.*\\_?uuid"
+        format: uuid
+      - name: "^.*\\_?email"
+        format: email
