@@ -12,6 +12,7 @@
     "bluebird": "^2.9.30",
     "joi": "^6.5.0",
     "js-yaml": "^3.3.1",
+    "json-mask": "^0.3.4",
     "lodash": "^3.9.3",
     "swagger-parser": "^2.5.0"
   },
