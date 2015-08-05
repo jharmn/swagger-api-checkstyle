@@ -17,11 +17,16 @@ namingConventions = {
   //"Train-Case": "[a-z0-9\-]*
 }
 
+function ValidationError(type, field) {
+  this.type = type;
+  this.field = field;
+}
+
 //Promise.onPossiblyUnhandledRejection(function(error){
 //  throw error;
 //});
 
-function getSpec(file) {
+function getSpecPromise(file) {
   return parser.parseAsync(file)
   .spread(function(api, metadata) {
     return api;
@@ -31,29 +36,13 @@ function getSpec(file) {
   });
 }
 
-function getCheckStyle(file) {
+function getCheckStylePromise(file) {
   return fs.readFileAsync(file)
   .then(yaml.safeLoad)
   .catch(function(e) {
     console.error("unable to read checkstyle\n"+e)
     process.exit(1);
   });
-}
-
-function ValidationErrors() {
-  this.errors = []
-  this.add = add;
-
-  function add(error) {
-    if (error != null) {
-      this.errors.push(error);
-    }
-  }
-}
-
-function ValidationError(type, field) {
-  this.type = type;
-  this.field = field;
 }
 
 function validatePath(path, pathNamingConvention) {
@@ -75,28 +64,28 @@ function validateOperation(opId, opNamingConvention) {
 }
 
 function validateConventions(spec, pathNamingConvention, opNamingConvention) {
-  validationErrors = new ValidationErrors();
+  var errors = new Array();
 
   result = mask(spec, "paths/*/*/operationId");
   paths = result.paths
   _.each(Object.keys(paths), function(path) {
 
     pathError = validatePath(path, pathNamingConvention);
-    validationErrors.add(pathError);
+    if (pathError != null) errors.push(pathError);
 
     pathValue = result.paths[path]
     _.each(Object.keys(pathValue), function(verb) {
 
       opId = pathValue[verb].operationId;
       opError = validateOperation(opId, opNamingConvention);
-      validationErrors.add(opError);
+      if (opError != null) errors.push(opError);
 
     });
   });
-  return validationErrors;
+  return errors;
 }
 
-function getSchema(spec, checkStyle) {
+function getSchema(checkStyle) {
   schema = Joi.object().keys({
     swagger: Joi.any().valid(checkStyle.swagger),
     host: joiRegex(checkStyle.host),
@@ -111,25 +100,32 @@ function getSchema(spec, checkStyle) {
   return schema;
 }
 
+function validate(checkStyleFile, specFile) {
+  specPromise = getSpecPromise(specFile);
+  stylePromise = getCheckStylePromise(checkStyleFile);
 
-checkStyleFile = './examples/uber/swagger-checkstyle.yaml';
-specFile = './examples/uber/swagger.yaml';
+  Promise.join(specPromise, stylePromise, function(spec, checkStyle) {
+    pathConvention = namingConventions[checkStyle.paths.namingConvention];
+    opIdConvention = namingConventions[checkStyle.paths.operationId.namingConvention];
+    errors = validateConventions(spec, pathConvention, opIdConvention);
+    console.log(errors);
 
-specPromise = getSpec(specFile);
-stylePromise = getCheckStyle(checkStyleFile);
-
-Promise.join(specPromise, stylePromise, function(spec, checkStyle) {
-  pathConvention = namingConventions[checkStyle.paths.namingConvention];
-  opIdConvention = namingConventions[checkStyle.paths.operationId.namingConvention];
-  errors = validateConventions(spec, pathConvention, opIdConvention);
-  console.log(errors);
-
-  return [spec,
-    getSchema(spec, checkStyle),
-    {allowUnknown: true}];
-}).spread(function(spec, schema, options) {
-  Joi.validateAsync(spec, schema, options)
-  .catch(function(err) {
-    console.log(err.details);
+    return [spec,
+      getSchema(spec, checkStyle),
+      {allowUnknown: true}];
+  }).spread(function(spec, schema, options) {
+    Joi.validateAsync(spec, schema, options)
+    .then(function(result) {
+      //console.log(result);
+    }).catch(function(err) {
+      console.log(err);
+    }).error(function(err) {
+      console.log(err);
+    });
   });
-});
+}
+
+checkStyle = './examples/uber/swagger-checkstyle.yaml';
+spec = './examples/uber/swagger.yaml';
+
+validate(checkStyle, spec);
