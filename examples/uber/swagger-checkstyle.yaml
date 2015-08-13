@@ -1,5 +1,5 @@
 swagger: "2.0"
-host: 
+host:
  - "^api\\.uber\\.com$"
  - "localhost:8080"
 basePath: "\/v1"
@@ -16,8 +16,12 @@ paths:
     1: sub-resource
   operationId:
     namingConvention: "camelCase"
+  tags:
+    namingConvention: "ProperCase"
+  verbs: "get"
+    # post, patch, put, delete
+    #- get
   parameters:
-    # body, header, path
     query:
       namingConvention: "snake_case"
       items:
@@ -25,13 +29,14 @@ paths:
           schemaRef: "#/parameters/LimitParam"
         - name: offset
           schemaRef: "#/parameters/OffsetParam"
-    verbs:
-      # post, patch, put, delete
-      - get
-    status:
-      200:
-      default:
-        schemaRef: "#/definitions/Error"
+    header:
+      namingConvention: "CAP-SPINE-CASE"
+    path:
+      namingConvention: "snake_case"
+  status:
+    200:
+    default:
+      schemaRef: "#/definitions/Error"
   schema:
     properties:
       - name: "^.*\\_?id"

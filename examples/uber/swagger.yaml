@@ -178,6 +178,10 @@ parameters:
     type: integer
     format: int32 
     description: Number of items to retrieve. Default is 5, maximum is 100.
+  ApiVersionParam:
+    name: "Api-Version"
+    type: string
+    description: The version of the API
 
 definitions:
   Product:

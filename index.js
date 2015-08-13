@@ -1,19 +1,21 @@
 var Promise = require("bluebird");
 var fs      = Promise.promisifyAll(require("fs"));
-var Joi     = Promise.promisifyAll(require("joi"));
 var parser  = Promise.promisifyAll(require("swagger-parser"));
 var yaml    = Promise.promisifyAll(require("js-yaml"));
 var _       = Promise.promisifyAll(require("lodash"));
 var mask    = require("json-mask");
 
 var joiRegex = require("./joi_regex.js");
+var Joi     = require("joi");
 
 'use strict';
 
 namingConventions = {
   "spine-case": /[^\/a-z0-9\-]*/g,
+  "CAP-SPINE-CASE": /[^\/A-Z0-9\-]*/g,
   "snake_case": /[^\/a-z0-9\_]*/g,
-  "camelCase": /[\/a-z]+[\/A-Z0-9][\/a-z0-9]+[\/A-Za-z0-9]*$/g
+  "camelCase": /[\/a-z]+[\/A-Z0-9][\/a-z0-9]+[\/A-Za-z0-9]*$/g,
+  "ProperCase": /^([A-Z][a-z]*)+$/g
   //"Train-Case": "[a-z0-9\-]*
 }
 
@@ -86,42 +88,74 @@ function validateConventions(spec, pathNamingConvention, opNamingConvention) {
 }
 
 function getSchema(checkStyle) {
+  pathConvention = namingConventions[checkStyle.paths.namingConvention];
+  opIdConvention = namingConventions[checkStyle.paths.operationId.namingConvention];
+  tagConvention= namingConventions[checkStyle.paths.tags.namingConvention];
+  queryParamConvention = namingConventions[checkStyle.paths.parameters.query.namingConvention];
+  headerParamConvention = namingConventions[checkStyle.paths.parameters.header.namingConvention];
+  pathParamConvention = namingConventions[checkStyle.paths.parameters.path.namingConvention];
+  statuses = new RegExp("^".concat(Object.keys(checkStyle.paths.status).join("$|^")).concat("$"));
+
   schema = Joi.object().keys({
     swagger: Joi.any().valid(checkStyle.swagger),
+    info: Joi.any(),
     host: joiRegex(checkStyle.host),
     scheme: joiRegex(checkStyle.schemes),
     basePath: joiRegex(checkStyle.basePath),
-    paths: Joi.object().keys({
+    produces: Joi.array().items(joiRegex(checkStyle.produces)),
+    consumes: Joi.array().items(joiRegex(checkStyle.consumes)),
+    schemes: Joi.array().items(joiRegex(checkStyle.schemes)),
+    paths: Joi.object() .pattern(pathConvention, Joi.object().keys({})
+    // TODO: pull list of verbs into regexp
+    .pattern(new RegExp("get"), Joi.object().keys({
+      summary: Joi.any(),
+      description: Joi.any(),
+      parameters: Joi.any(),
+      operationId: joiRegex(opIdConvention),
+      tags: Joi.array().items(joiRegex(tagConvention)),
+      responses: Joi.object()
+        .pattern(statuses, Joi.object().keys({
+          description: Joi.any(),
+          schema: Joi.any()
+        })
+      )
+    }))),
+    parameters: Joi.object().pattern(queryParamConvention, Joi.object().keys({
+      name: Joi.string(),
+      'in': Joi.string().insensitive().regex(/^query$/),
+      type: Joi.string(),
+      format: Joi.string(),
+      description: Joi.string()
+    })).pattern(pathParamConvention, Joi.object().keys({
+      name: Joi.string(),
+      'in': Joi.string().insensitive().regex(/^path/),
+      type: Joi.string(),
+      format: Joi.string(),
+      description: Joi.string()
+    })),
+    definitions: Joi.any()
 
-    })
-    //produces: joiRegex(checkStyle.produces), //TODO: Array matching
   });
 
   return schema;
 }
 
 function validate(checkStyleFile, specFile) {
-  specPromise = getSpecPromise(specFile);
-  stylePromise = getCheckStylePromise(checkStyleFile);
-
-  Promise.join(specPromise, stylePromise, function(spec, checkStyle) {
+  Promise.join(getSpecPromise(specFile), getCheckStylePromise(checkStyleFile), 
+               function(spec, checkStyle) {
     pathConvention = namingConventions[checkStyle.paths.namingConvention];
     opIdConvention = namingConventions[checkStyle.paths.operationId.namingConvention];
     errors = validateConventions(spec, pathConvention, opIdConvention);
-    console.log(errors);
+    console.log(errors)
 
     return [spec,
-      getSchema(spec, checkStyle),
-      {allowUnknown: true}];
+      getSchema(checkStyle),
+      {}];//{allowUnknown: true}];
   }).spread(function(spec, schema, options) {
-    Joi.validateAsync(spec, schema, options)
-    .then(function(result) {
-      //console.log(result);
-    }).catch(function(err) {
-      console.log(err);
-    }).error(function(err) {
-      console.log(err);
-    });
+    var result = Joi.validate(spec, schema, options);
+    if (result.error) {
+      console.log(result.error) 
+    }
   });
 }
 
