@@ -18,9 +18,9 @@ paths:
     namingConvention: "camelCase"
   tags:
     namingConvention: "ProperCase"
-  verbs: "get"
-    # post, patch, put, delete
-    #- get
+  verbs:
+    - get
+    - post
   parameters:
     query:
       namingConvention: "snake_case"
