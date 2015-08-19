@@ -15,13 +15,13 @@ basePath: /v1
 produces:
   - application/json
 paths:
-  /Pr_oducts:
+  /Prod_ucts:
     get:
-      operationId: getProducts
+      operationId: G_etProducts
       summary: Product Types
       description: The Products endpoint returns information about the Uber products offered at a given location. The response includes the display name and other details about each product, and lists the products in the proper display order.
       parameters:
-        - name: latitude
+        - name: Latitude
           in: query
           description: Latitude component of location.
           required: true

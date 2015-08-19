@@ -8,4 +8,7 @@ Some areas of concern in governing standards:
 * Restrict the use of verb, status
 * Enforce the use of schema and formats in parameters and fields
 
-`swagger-api-checkstyle` is a specification meant to designate these governance criteria. This should provide a specification for implementing the validation of API spec files against a checkstyle definition. 
+`swagger-api-checkstyle` is a specification meant to designate these governance criteria. This should provide a specification for implementing the validation of API spec files against a checkstyle definition.
+
+Node library in development
+

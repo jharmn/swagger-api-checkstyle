@@ -1,4 +1,4 @@
-var joiRegex  = require("../joi_regex.js");
+var joiRegex  = require("../lib/joi_regex");
 var Joi       = require("joi");
 var _         = require("lodash");
 var should    = require('should');
