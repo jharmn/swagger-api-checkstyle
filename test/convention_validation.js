@@ -10,7 +10,7 @@ describe('validate', function(done) {
 
     swaggerCheckStyle.validate(checkStyle, spec, function(err, result) {
       if (err) throw err;
-      should.not.exist(result.error && result.error.details)
+      should.not.exist(result.error)
       done();
     });
   });
