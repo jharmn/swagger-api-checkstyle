@@ -8,9 +8,9 @@ describe('validate', function(done) {
     spec = './examples/uber/swagger.yaml';
     result = null;
 
-    swaggerCheckStyle.validate(checkStyle, spec, function(result, err) {
+    swaggerCheckStyle.validate(checkStyle, spec, function(err, result) {
       if (err) throw err;
-      should.not.exist(result.error)
+      should.not.exist(result.error && result.error.details)
       done();
     });
   });
@@ -18,7 +18,7 @@ describe('validate', function(done) {
     checkStyle = './examples/uber/swagger-checkstyle.yaml';
     spec = './examples/uber/swagger-errors.yaml';
 
-    swaggerCheckStyle.validate(checkStyle, spec, function(result, err) {
+    swaggerCheckStyle.validate(checkStyle, spec, function(err, result) {
       if (err) throw err;
       result.error.name.should.eql("ValidationError");
       done();

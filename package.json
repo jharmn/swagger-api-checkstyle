@@ -2,9 +2,9 @@
   "name": "swagger-checkstyle",
   "version": "1.0.0",
   "description": "Checkstyle on swagger definitions",
-  "main": "index.js",
+  "main": "lib/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha"
   },
   "author": "Jason Harmon",
   "license": "ISC",
@@ -15,7 +15,7 @@
     "js-yaml": "^3.3.1",
     "json-mask": "^0.3.4",
     "lodash": "^3.9.3",
-    "swagger-parser": "^2.5.0"
+    "swagger-parser": "^3.3"
   },
   "devDependencies": {
     "mocha": "^2.2.5",
