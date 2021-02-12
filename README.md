@@ -1,3 +1,6 @@
+Obviously I haven't worked on this project/PoC in a long time. 
+If you're looking for this kind of functionality, the problem has been solved with [Stoplight's Spectral](https://stoplight.io/open-source/spectral/)
+
 # swagger-api-checkstyle
 Defines conventions for Swagger definitions for API governance
 
